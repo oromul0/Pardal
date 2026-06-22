@@ -132,6 +132,31 @@ h3 { font-size: 15px; margin: 18px 0 6px; }
 .popup-name { font-weight: 600; }
 .popup-meta { color: var(--muted); font-size: 12px; margin-top: 2px; }
 
+.truck-pin {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #d97706;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+  cursor: grab;
+}
+.truck-pin:active { cursor: grabbing; }
+.leaflet-marker-draggable .truck-pin { cursor: grab; }
+
+.export-control button {
+  background: var(--surface);
+  border: 0;
+  padding: 8px 12px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  cursor: pointer;
+  border-radius: 4px;
+}
+.export-control button:hover { background: var(--accent-soft); color: var(--accent); }
+
 @media (max-width: 720px) {
   #app { flex-direction: column; }
   .sidebar {

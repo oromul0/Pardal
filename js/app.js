@@ -1,4 +1,6 @@
-// App principal — carrega config, food trucks, CSV, renderiza mapa e painel.
+// App principal — carrega config, food trucks, CSV, renderiza mapa.
+// Marcadores arrastáveis: você pode reposicionar cada food truck direto no mapa
+// e clicar em "Exportar posições" para baixar um foodtrucks.json atualizado.
 (async function () {
   const statusEl = document.getElementById('status');
   const setStatus = (msg, persist = false) => {
@@ -48,76 +50,72 @@
   const columns = Inference.inferColumns(rows, headers, config);
 
   // Mapa
-  const center = [-20.2585, -40.2360];
+  const center = [-20.2822, -40.2940]; // Praça Regina Frigeri Furno, Jardim da Penha, Vitória-ES
   const map = L.map('map', { zoomControl: true }).setView(center, 19);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 22,
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
   }).addTo(map);
 
-  // Marcador central da praça → abre lista lateral
-  const plazaIcon = L.divIcon({
-    className: '',
-    html: '<div style="background:#2a8a5f;color:#fff;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,0.3);border:2px solid #fff;">P</div>',
-    iconSize: [36, 36],
-    iconAnchor: [18, 18]
-  });
-  L.marker(center, { icon: plazaIcon, title: 'Praça Jardim Napen' })
-    .addTo(map)
-    .on('click', openTruckList);
-
-  // Marcadores dos food trucks
+  // Marcadores arrastáveis dos food trucks
+  // Usamos L.marker (com ícone customizado) em vez de circleMarker porque
+  // só L.marker tem suporte nativo a draggable.
   const truckMarkers = new Map();
+  const truckIcon = L.divIcon({
+    className: '',
+    html: '<div class="truck-pin" title="Arraste para reposicionar"></div>',
+    iconSize: [22, 22],
+    iconAnchor: [11, 11]
+  });
+
   for (const t of trucks) {
-    const m = L.circleMarker([t.lat, t.lon], {
-      radius: 9,
-      color: '#fff',
-      weight: 2,
-      fillColor: '#d97706',
-      fillOpacity: 0.95
+    const m = L.marker([t.lat, t.lon], {
+      icon: truckIcon,
+      draggable: true,
+      title: t.nome
     }).addTo(map);
-    m.bindTooltip(t.nome, { direction: 'top' });
+    m.bindTooltip(t.nome, { direction: 'top', offset: [0, -8] });
     m.on('click', () => openTruckDetails(t));
+    m.on('dragend', () => {
+      const ll = m.getLatLng();
+      t.lat = Number(ll.lat.toFixed(6));
+      t.lon = Number(ll.lng.toFixed(6));
+      setStatus(`${t.nome} reposicionado — lembre de exportar.`);
+    });
     truckMarkers.set(t.id, m);
   }
 
-  // Sidebar
+  // Botão "Exportar posições" — gera um arquivo JSON para download
+  const ExportControl = L.Control.extend({
+    options: { position: 'topright' },
+    onAdd: function () {
+      const div = L.DomUtil.create('div', 'leaflet-bar leaflet-control export-control');
+      div.innerHTML = '<button id="exportBtn" title="Baixar foodtrucks.json com as posições atuais">Exportar posições</button>';
+      L.DomEvent.disableClickPropagation(div);
+      return div;
+    }
+  });
+  map.addControl(new ExportControl());
+  document.getElementById('exportBtn').addEventListener('click', () => {
+    const json = JSON.stringify(trucks, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'foodtrucks.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    setStatus('foodtrucks.json baixado. Substitua o arquivo em data/ e faça commit.', true);
+  });
+
+  // Sidebar — só abre quando se clica em um food truck
   const sidebar = document.getElementById('sidebar');
   const sidebarContent = document.getElementById('sidebarContent');
   document.getElementById('closeSidebar').addEventListener('click', () => {
     sidebar.classList.add('hidden');
   });
-
-  function openTruckList() {
-    const counts = new Map();
-    if (truckColumn) {
-      for (const r of rows) {
-        const k = String(r[truckColumn] || '').trim();
-        if (!k) continue;
-        counts.set(k, (counts.get(k) || 0) + 1);
-      }
-    }
-    let html = '<h2>Food trucks da praça</h2>';
-    html += `<div class="meta">${trucks.length} estabelecimentos${usingMock ? ' — exibindo dados de demonstração' : ''}</div>`;
-    html += '<ul class="truck-list">';
-    for (const t of trucks) {
-      const n = counts.get(t.nome) || 0;
-      html += `<li data-truck-id="${t.id}"><span>${escapeHtml(t.nome)}</span><span class="count">${n} aval.</span></li>`;
-    }
-    html += '</ul>';
-    sidebarContent.innerHTML = html;
-    sidebar.classList.remove('hidden');
-    sidebarContent.querySelectorAll('li').forEach(li => {
-      li.addEventListener('click', () => {
-        const id = Number(li.dataset.truckId);
-        const t = trucks.find(x => x.id === id);
-        if (t) {
-          map.setView([t.lat, t.lon], 20, { animate: true });
-          openTruckDetails(t);
-        }
-      });
-    });
-  }
 
   function openTruckDetails(truck) {
     const truckRows = truckColumn
@@ -173,15 +171,7 @@
       }
     }
 
-    sidebarContent.innerHTML = '';
-    const back = document.createElement('button');
-    back.textContent = '← voltar à lista';
-    back.style.cssText = 'background:transparent;border:0;color:#2a8a5f;cursor:pointer;font-size:13px;padding:0;margin-bottom:8px;font-weight:500;';
-    back.addEventListener('click', openTruckList);
-    sidebarContent.appendChild(back);
-    const wrap = document.createElement('div');
-    wrap.innerHTML = html;
-    sidebarContent.appendChild(wrap);
+    sidebarContent.innerHTML = html;
     sidebar.classList.remove('hidden');
   }
 
