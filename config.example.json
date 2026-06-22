@@ -1,0 +1,13 @@
+{
+  "csvUrl": "COLE_AQUI_A_URL_DO_CSV_PUBLICADO_DO_GOOGLE_SHEETS",
+  "foodTruckColumn": "Qual food truck você avaliou?",
+  "columnLabels": {
+    "Nota geral": "Nota geral",
+    "Qualidade da comida": "Qualidade da comida",
+    "Atendimento": "Atendimento",
+    "Voltaria?": "Voltaria ao local?",
+    "Comentario": "Comentários"
+  },
+  "hiddenColumns": [],
+  "columnOrder": ["Nota geral", "Qualidade da comida", "Atendimento", "Voltaria?", "Comentario"]
+}
