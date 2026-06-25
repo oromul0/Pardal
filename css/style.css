@@ -334,17 +334,38 @@ h3 { font-size: 14px; margin: 14px 0 6px; }
 .status.visible { display: block; }
 
 /* ---- Map markers ---- */
-.truck-pin {
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background: #d97706;
-  border: 2px solid #fff;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+.truck-marker {
   cursor: pointer;
   transition: transform 0.15s;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.35));
 }
-.truck-pin:hover { transform: scale(1.2); }
+.truck-marker:hover { transform: scale(1.2); }
+
+/* ---- Last update indicator ---- */
+.last-update {
+  position: fixed;
+  bottom: 12px;
+  right: 12px;
+  background: rgba(255,255,255,0.92);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.update-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  display: inline-block;
+}
+.update-dot.loading { animation: pulse 1s infinite; }
+@keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
 
 /* ---- Responsive ---- */
 @media (max-width: 720px) {
