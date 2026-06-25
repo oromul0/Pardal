@@ -1,5 +1,5 @@
 {
-  "csvUrl": "COLE_AQUI_A_URL_DO_CSV_PUBLICADO_DO_GOOGLE_SHEETS",
+  "csvUrl": "https://docs.google.com/spreadsheets/d/e/2PACX-1vTzGGtrCW-EMJHyMC4t7KlD17zDajBCvj6e7U9YHNONz-v7THKDqZPGeku-HcvyCUntp95aGIMZ8--Z/pub?output=csv",
   "foodTruckColumn": "Qual food truck você avaliou?",
   "columnLabels": {
     "Nota geral": "Nota geral",
