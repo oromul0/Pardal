@@ -1,6 +1,3 @@
-// App principal — carrega config, food trucks, CSV, renderiza mapa.
-// Marcadores arrastáveis: você pode reposicionar cada food truck direto no mapa
-// e clicar em "Exportar posições" para baixar um foodtrucks.json atualizado.
 (async function () {
   const statusEl = document.getElementById('status');
   const setStatus = (msg, persist = false) => {
@@ -9,123 +6,259 @@
     if (!persist) setTimeout(() => statusEl.classList.remove('visible'), 2500);
   };
 
-  // 1. Config (opcional)
+  // --- SVG icon helpers (inline, sem dependência externa) ---
+  const ICONS = {
+    location: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 6-9 13-9 13S3 16 3 10a9 9 0 1 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>',
+    phone: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2A19.86 19.86 0 0 1 3.09 5.18 2 2 0 0 1 5.11 3h3a2 2 0 0 1 2 1.72c.12.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 11.91a16 16 0 0 0 6 6l2.27-2.27a2 2 0 0 1 2.11-.45c.9.34 1.85.58 2.81.7A2 2 0 0 1 22 16.92z"/></svg>',
+    copy: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>',
+    delivery: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="18.5" cy="18.5" r="2.5"/><circle cx="7.5" cy="18.5" r="2.5"/><path d="M10 18.5h6M5 18.5H3V12l3-4h4v10.5"/><path d="M10 8h4l3 4v6.5"/><path d="M14 8V4H7"/></svg>'
+  };
+
+  // --- Config ---
   let config = {};
   try {
     const r = await fetch('config.json', { cache: 'no-store' });
     if (r.ok) config = await r.json();
-  } catch (_) { /* sem config */ }
+  } catch (_) {}
 
-  // 2. Food trucks
-  let trucks = [];
+  // --- Praças ---
+  let pracas = [];
+  try {
+    const r = await fetch('data/pracas.json', { cache: 'no-store' });
+    pracas = await r.json();
+  } catch (_) {}
+
+  // --- Food trucks ---
+  let allTrucks = [];
   try {
     const r = await fetch('data/foodtrucks.json', { cache: 'no-store' });
-    trucks = await r.json();
+    allTrucks = await r.json();
   } catch (e) {
     setStatus('Erro carregando food trucks', true);
     return;
   }
 
-  // 3. CSV — usa config.csvUrl se houver, senão mock
+  // --- CSV ---
   const csvUrl = (config.csvUrl && config.csvUrl.trim()) ? config.csvUrl : 'data/mock.csv';
   const usingMock = csvUrl === 'data/mock.csv';
-
-  const csvData = await new Promise((resolve, reject) => {
-    Papa.parse(csvUrl, {
-      download: true,
-      header: true,
-      skipEmptyLines: true,
-      complete: res => resolve(res),
-      error: err => reject(err)
+  let rows = [], headers = [];
+  try {
+    const csvData = await new Promise((resolve, reject) => {
+      Papa.parse(csvUrl, { download: true, header: true, skipEmptyLines: true, complete: resolve, error: reject });
     });
-  }).catch(err => {
+    rows = csvData.data;
+    headers = csvData.meta.fields;
+  } catch (err) {
     setStatus('Erro lendo CSV: ' + err.message, true);
-    return null;
-  });
-
-  const rows = csvData ? csvData.data : [];
-  const headers = csvData ? csvData.meta.fields : [];
+  }
 
   const truckColumn = Inference.detectTruckColumn(headers, config.foodTruckColumn);
   const columns = Inference.inferColumns(rows, headers, config);
 
-  // Mapa
-  const center = [-20.2822, -40.2940]; // Praça Regina Frigeri Furno, Jardim da Penha, Vitória-ES
-  const map = L.map('map', { zoomControl: true }).setView(center, 19);
+  // --- Mapa ---
+  const defaultCenter = pracas.length ? [pracas[0].lat, pracas[0].lon] : [-20.2822, -40.2940];
+  const defaultZoom = pracas.length ? (pracas[0].zoom || 19) : 19;
+  const map = L.map('map', { zoomControl: true }).setView(defaultCenter, defaultZoom);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 22,
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
   }).addTo(map);
 
-  // Marcadores arrastáveis dos food trucks
-  // Usamos L.marker (com ícone customizado) em vez de circleMarker porque
-  // só L.marker tem suporte nativo a draggable.
-  const truckMarkers = new Map();
+  // --- Dropdown de praças ---
+  const pracaSelect = document.getElementById('pracaSelect');
+  pracaSelect.innerHTML = '';
+  for (const p of pracas) {
+    const opt = document.createElement('option');
+    opt.value = p.id;
+    opt.textContent = p.nome + ' — ' + p.bairro;
+    pracaSelect.appendChild(opt);
+  }
+  if (pracas.length === 0) {
+    const opt = document.createElement('option');
+    opt.textContent = 'Nenhuma praça cadastrada';
+    pracaSelect.appendChild(opt);
+  }
+  pracaSelect.addEventListener('change', () => {
+    const p = pracas.find(x => x.id === pracaSelect.value);
+    if (p) {
+      map.setView([p.lat, p.lon], p.zoom || 19, { animate: true });
+      renderTrucks(p.id);
+    }
+  });
+
+  // --- Marcadores ---
   const truckIcon = L.divIcon({
     className: '',
-    html: '<div class="truck-pin" title="Arraste para reposicionar"></div>',
+    html: '<div class="truck-pin"></div>',
     iconSize: [22, 22],
     iconAnchor: [11, 11]
   });
+  let truckMarkers = [];
+  let currentTrucks = [];
 
-  for (const t of trucks) {
-    const m = L.marker([t.lat, t.lon], {
-      icon: truckIcon,
-      draggable: true,
-      title: t.nome
-    }).addTo(map);
-    m.bindTooltip(t.nome, { direction: 'top', offset: [0, -8] });
-    m.on('click', () => openTruckDetails(t));
-    m.on('dragend', () => {
-      const ll = m.getLatLng();
-      t.lat = Number(ll.lat.toFixed(6));
-      t.lon = Number(ll.lng.toFixed(6));
-      setStatus(`${t.nome} reposicionado — lembre de exportar.`);
-    });
-    truckMarkers.set(t.id, m);
-  }
+  function renderTrucks(pracaId) {
+    truckMarkers.forEach(m => map.removeLayer(m));
+    truckMarkers = [];
+    currentTrucks = pracaId
+      ? allTrucks.filter(t => t.pracaId === pracaId)
+      : allTrucks;
 
-  // Botão "Exportar posições" — gera um arquivo JSON para download
-  const ExportControl = L.Control.extend({
-    options: { position: 'topright' },
-    onAdd: function () {
-      const div = L.DomUtil.create('div', 'leaflet-bar leaflet-control export-control');
-      div.innerHTML = '<button id="exportBtn" title="Baixar foodtrucks.json com as posições atuais">Exportar posições</button>';
-      L.DomEvent.disableClickPropagation(div);
-      return div;
+    for (const t of currentTrucks) {
+      const m = L.marker([t.lat, t.lon], { icon: truckIcon, title: t.nome }).addTo(map);
+      m.bindTooltip(t.nome, { direction: 'top', offset: [0, -8] });
+      m.on('click', () => {
+        map.setView([t.lat, t.lon], Math.max(map.getZoom(), 19), { animate: true });
+        openProfile(t);
+      });
+      truckMarkers.push(m);
     }
-  });
-  map.addControl(new ExportControl());
-  document.getElementById('exportBtn').addEventListener('click', () => {
-    const json = JSON.stringify(trucks, null, 2);
-    const blob = new Blob([json], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'foodtrucks.json';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    setStatus('foodtrucks.json baixado. Substitua o arquivo em data/ e faça commit.', true);
+  }
+  renderTrucks(pracas.length ? pracas[0].id : null);
+
+  // --- Busca ---
+  const searchInput = document.getElementById('searchInput');
+  const searchResults = document.getElementById('searchResults');
+
+  searchInput.addEventListener('input', () => {
+    const q = searchInput.value.trim().toLowerCase();
+    if (q.length < 2) { searchResults.classList.add('hidden'); return; }
+
+    const hits = [];
+    for (const p of pracas) {
+      if (p.nome.toLowerCase().includes(q) || p.bairro.toLowerCase().includes(q)) {
+        hits.push({ type: 'praca', label: p.nome, sub: p.bairro, data: p });
+      }
+    }
+    for (const t of allTrucks) {
+      if (t.nome.toLowerCase().includes(q)) {
+        hits.push({ type: 'truck', label: t.nome, sub: '', data: t });
+      }
+    }
+
+    if (hits.length === 0) {
+      searchResults.innerHTML = '<li style="color:var(--muted)">Nenhum resultado</li>';
+    } else {
+      searchResults.innerHTML = hits.slice(0, 8).map((h, i) =>
+        `<li data-idx="${i}"><span class="result-type">${h.type === 'praca' ? 'Praça' : 'Food truck'}</span>${escapeHtml(h.label)}</li>`
+      ).join('');
+      searchResults.querySelectorAll('li[data-idx]').forEach(li => {
+        li.addEventListener('click', () => {
+          const h = hits[Number(li.dataset.idx)];
+          if (h.type === 'praca') {
+            pracaSelect.value = h.data.id;
+            pracaSelect.dispatchEvent(new Event('change'));
+          } else {
+            map.setView([h.data.lat, h.data.lon], 20, { animate: true });
+            openProfile(h.data);
+          }
+          searchInput.value = '';
+          searchResults.classList.add('hidden');
+        });
+      });
+    }
+    searchResults.classList.remove('hidden');
   });
 
-  // Sidebar — só abre quando se clica em um food truck
+  searchInput.addEventListener('blur', () => {
+    setTimeout(() => searchResults.classList.add('hidden'), 200);
+  });
+
+  // --- Sidebar ---
   const sidebar = document.getElementById('sidebar');
   const sidebarContent = document.getElementById('sidebarContent');
   document.getElementById('closeSidebar').addEventListener('click', () => {
     sidebar.classList.add('hidden');
   });
 
-  function openTruckDetails(truck) {
+  // --- Perfil do food truck ---
+  function openProfile(truck) {
+    const initial = truck.nome.charAt(0).toUpperCase();
+    const hasCover = truck.fotoCapa && truck.fotoCapa.trim();
+    const hasAvatar = truck.fotoPerfil && truck.fotoPerfil.trim();
+    const hasMenu = truck.fotoCardapio && truck.fotoCardapio.trim();
+
+    const coverStyle = hasCover
+      ? `background-image:url('${truck.fotoCapa}');background-size:cover;background-position:center;`
+      : '';
+
+    const avatarContent = hasAvatar
+      ? `<img src="${truck.fotoPerfil}" alt="${escapeHtml(truck.nome)}">`
+      : initial;
+
+    const avatarStyle = hasAvatar
+      ? `background-image:url('${truck.fotoPerfil}');background-color:transparent;color:transparent;`
+      : '';
+
+    const endereco = truck.endereco || '';
+    const telefone = truck.telefone || '';
+    const descricao = truck.descricao || '';
+
+    let html = `
+      <div class="profile-cover" style="${coverStyle}"></div>
+      <div class="profile-avatar" style="${avatarStyle}">${avatarContent}</div>
+      <div class="profile-body">
+        <h2>${escapeHtml(truck.nome)}</h2>
+        ${descricao ? `<div class="profile-desc">${escapeHtml(descricao)}</div>` : '<div class="profile-desc" style="font-style:italic">Sem descrição cadastrada</div>'}
+
+        <div class="profile-fields">
+          <div class="profile-field">
+            <span class="field-icon">${ICONS.location}</span>
+            ${endereco
+              ? `<span class="field-text">${escapeHtml(endereco)}</span>
+                 <button class="copy-btn" data-copy="${escapeHtml(endereco)}" title="Copiar endereço">${ICONS.copy}</button>`
+              : '<span class="field-text field-empty">Endereço não informado</span>'}
+          </div>
+          <div class="profile-field">
+            <span class="field-icon">${ICONS.phone}</span>
+            ${telefone
+              ? `<span class="field-text">${escapeHtml(telefone)}</span>`
+              : '<span class="field-text field-empty">Telefone não informado</span>'}
+          </div>
+        </div>
+
+        <div class="delivery-badge ${truck.delivery ? 'active' : 'inactive'}">
+          ${ICONS.delivery}
+          <span>${truck.delivery ? 'Faz delivery' : 'Não faz delivery'}</span>
+        </div>
+
+        <div class="menu-section">
+          <h3>Cardápio</h3>
+          <div class="menu-photo">
+            ${hasMenu
+              ? `<img src="${truck.fotoCardapio}" alt="Cardápio de ${escapeHtml(truck.nome)}">`
+              : '<div class="menu-placeholder">Foto do cardápio não disponível</div>'}
+          </div>
+        </div>
+
+        <button class="btn-reviews" data-truck-id="${truck.id}">Ver avaliações</button>
+      </div>`;
+
+    sidebarContent.innerHTML = html;
+    sidebar.classList.remove('hidden');
+
+    sidebarContent.querySelector('.btn-reviews').addEventListener('click', () => {
+      openReviews(truck);
+    });
+
+    sidebarContent.querySelectorAll('.copy-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        navigator.clipboard.writeText(btn.dataset.copy).then(() => setStatus('Endereço copiado!'));
+      });
+    });
+  }
+
+  // --- Avaliações ---
+  function openReviews(truck) {
     const truckRows = truckColumn
       ? rows.filter(r => String(r[truckColumn] || '').trim() === truck.nome)
       : [];
-
     const aggregated = Inference.aggregateForTruck(columns, truckRows);
 
-    let html = `<h2>${escapeHtml(truck.nome)}</h2>`;
-    html += `<div class="meta">${truckRows.length} avaliação(ões)</div>`;
+    let html = `
+      <button class="btn-back" data-truck-id="${truck.id}">&larr; voltar ao perfil</button>
+      <div class="reviews-panel">
+        <h2>Avaliações — ${escapeHtml(truck.nome)}</h2>
+        <div class="meta">${truckRows.length} avaliação(ões)</div>`;
 
     if (truckRows.length === 0) {
       html += '<p class="meta" style="margin-top:14px">Sem avaliações ainda para este estabelecimento.</p>';
@@ -134,7 +267,6 @@
     for (const col of aggregated) {
       if (col.type === 'numeric' && col.count > 0) {
         const pct = (col.avg / col.scale) * 100;
-        const stars = renderStars(col.avg, col.scale);
         html += `
           <div class="metric">
             <div class="metric-label">${escapeHtml(col.label)}</div>
@@ -142,7 +274,7 @@
               <span>${col.avg.toFixed(1)} / ${col.scale}</span>
               <span class="bar"><span style="width:${pct.toFixed(0)}%"></span></span>
             </div>
-            <div class="stars">${stars}</div>
+            <div class="stars">${renderStars(col.avg, col.scale)}</div>
             <div class="meta">${col.count} resposta(s)</div>
           </div>`;
       } else if (col.type === 'categorical' && col.total > 0) {
@@ -158,11 +290,8 @@
             </div>`;
         }
       } else if (col.type === 'text' && col.values.length > 0) {
-        html += `<h3>${escapeHtml(col.label)}</h3>`;
-        html += '<ul class="comments">';
-        for (const v of col.values) {
-          html += `<li>${escapeHtml(v)}</li>`;
-        }
+        html += `<h3>${escapeHtml(col.label)}</h3><ul class="comments">`;
+        for (const v of col.values) { html += `<li>${escapeHtml(v)}</li>`; }
         html += '</ul>';
       } else if (col.type === 'timestamp' && col.latest) {
         const d = col.latest;
@@ -170,9 +299,15 @@
         html += `<div class="meta" style="margin-top:8px">Última avaliação em ${fmt}</div>`;
       }
     }
+    html += '</div>';
 
     sidebarContent.innerHTML = html;
     sidebar.classList.remove('hidden');
+    sidebar.scrollTop = 0;
+
+    sidebarContent.querySelector('.btn-back').addEventListener('click', () => {
+      openProfile(truck);
+    });
   }
 
   function renderStars(avg, scale) {
@@ -184,12 +319,10 @@
   }
 
   function escapeHtml(s) {
-    return String(s).replace(/[&<>"']/g, c => ({
-      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-    }[c]));
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   }
 
   if (usingMock) {
-    setStatus('Modo demonstração: dados fictícios. Configure config.json para usar dados reais.', true);
+    setStatus('Modo demonstração — dados fictícios.', true);
   }
 })();
