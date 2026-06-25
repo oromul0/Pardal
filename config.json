@@ -1,13 +1,37 @@
 {
   "csvUrl": "https://docs.google.com/spreadsheets/d/e/2PACX-1vTzGGtrCW-EMJHyMC4t7KlD17zDajBCvj6e7U9YHNONz-v7THKDqZPGeku-HcvyCUntp95aGIMZ8--Z/pub?output=csv",
-  "foodTruckColumn": "Qual food truck você avaliou?",
+  "foodTruckColumn": "FoodTruck",
   "columnLabels": {
-    "Nota geral": "Nota geral",
-    "Qualidade da comida": "Qualidade da comida",
-    "Atendimento": "Atendimento",
-    "Voltaria?": "Voltaria ao local?",
-    "Comentario": "Comentários"
+    "Iluminação": "Iluminação",
+    "Variedade": "Variedade",
+    "Layout/Design": "Layout / Design",
+    "Higiene da cozinha": "Higiene da cozinha",
+    "Higiene das mesas": "Higiene das mesas",
+    "Limpeza do local de consumo": "Limpeza do local de consumo",
+    "Segurança": "Segurança",
+    "Limpeza ": "Limpeza",
+    "Coleta de lixo e resíduos": "Coleta de lixo e resíduos",
+    "Banheiros": "Banheiros",
+    "Tempo de atendimento": "Tempo de atendimento",
+    "Formalidade e cortesia": "Formalidade e cortesia",
+    "Atenção ao pedido": "Atenção ao pedido",
+    "Opções de pagamento": "Opções de pagamento"
   },
-  "hiddenColumns": [],
-  "columnOrder": ["Nota geral", "Qualidade da comida", "Atendimento", "Voltaria?", "Comentario"]
+  "hiddenColumns": ["Endereço de e-mail", "Coluna 14"],
+  "columnOrder": [
+    "Tempo de atendimento",
+    "Formalidade e cortesia",
+    "Atenção ao pedido",
+    "Opções de pagamento",
+    "Variedade",
+    "Higiene da cozinha",
+    "Higiene das mesas",
+    "Limpeza do local de consumo",
+    "Limpeza ",
+    "Coleta de lixo e resíduos",
+    "Banheiros",
+    "Iluminação",
+    "Segurança",
+    "Layout/Design"
+  ]
 }
