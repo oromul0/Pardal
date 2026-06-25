@@ -1,134 +1,134 @@
-﻿[
-    {
-        "id":  1,
-        "nome":  "Rebocando",
-        "lat":  -20.28193,
-        "lon":  -40.294
-    },
-    {
-        "id":  2,
-        "nome":  "TaboonKebaberia",
-        "lat":  -20.281941,
-        "lon":  -40.293919
-    },
-    {
-        "id":  3,
-        "nome":  "Franguinho Mania",
-        "lat":  -20.281973,
-        "lon":  -40.293844
-    },
-    {
-        "id":  4,
-        "nome":  "Urban Food Trailer",
-        "lat":  -20.282023,
-        "lon":  -40.293782
-    },
-    {
-        "id":  5,
-        "nome":  "Mexicanto",
-        "lat":  -20.282088,
-        "lon":  -40.293738
-    },
-    {
-        "id":  6,
-        "nome":  "Tapiocaria Maceió",
-        "lat":  -20.282162,
-        "lon":  -40.293715
-    },
-    {
-        "id":  7,
-        "nome":  "Rojo",
-        "lat":  -20.282238,
-        "lon":  -40.293715
-    },
-    {
-        "id":  8,
-        "nome":  "Bendito Açaí",
-        "lat":  -20.282312,
-        "lon":  -40.293738
-    },
-    {
-        "id":  9,
-        "nome":  "Pastelaria Paulista",
-        "lat":  -20.282377,
-        "lon":  -40.293782
-    },
-    {
-        "id":  10,
-        "nome":  "Doceria",
-        "lat":  -20.282427,
-        "lon":  -40.293844
-    },
-    {
-        "id":  11,
-        "nome":  "Servemais Espetos",
-        "lat":  -20.282459,
-        "lon":  -40.293919
-    },
-    {
-        "id":  12,
-        "nome":  "Sem ID",
-        "lat":  -20.28247,
-        "lon":  -40.294
-    },
-    {
-        "id":  13,
-        "nome":  "A Melhor Opção",
-        "lat":  -20.282459,
-        "lon":  -40.294081
-    },
-    {
-        "id":  14,
-        "nome":  "Sanduíches Tati Vero",
-        "lat":  -20.282427,
-        "lon":  -40.294156
-    },
-    {
-        "id":  15,
-        "nome":  "Cantinho do Kibe",
-        "lat":  -20.282377,
-        "lon":  -40.294218
-    },
-    {
-        "id":  16,
-        "nome":  "Bicho Papão",
-        "lat":  -20.282312,
-        "lon":  -40.294262
-    },
-    {
-        "id":  17,
-        "nome":  "Pérola da Bahia Acarajé",
-        "lat":  -20.282238,
-        "lon":  -40.294285
-    },
-    {
-        "id":  18,
-        "nome":  "Cervejaria Camburi",
-        "lat":  -20.282162,
-        "lon":  -40.294285
-    },
-    {
-        "id":  19,
-        "nome":  "Yaki Food Vix",
-        "lat":  -20.282088,
-        "lon":  -40.294262
-    },
-    {
-        "id":  20,
-        "nome":  "Hotdog Arita",
-        "lat":  -20.282023,
-        "lon":  -40.294218
-    },
-    {
-        "id":  21,
-        "nome":  "Superfrango",
-        "lat":  -20.281973,
-        "lon":  -40.294156
-    },
-    {
-        "id":  22,
-        "nome":  "Espetinhos da Lu",
-        "lat":  -20.281941,
-        "lon":  -40.294081
-    }
+[
+  {
+    "id": 1,
+    "nome": "Rebocando",
+    "lat": -20.282839,
+    "lon": -40.294083
+  },
+  {
+    "id": 2,
+    "nome": "TaboonKebaberia",
+    "lat": -20.282808,
+    "lon": -40.294225
+  },
+  {
+    "id": 3,
+    "nome": "Franguinho Mania",
+    "lat": -20.282743,
+    "lon": -40.294362
+  },
+  {
+    "id": 4,
+    "nome": "Urban Food Trailer",
+    "lat": -20.282816,
+    "lon": -40.293933
+  },
+  {
+    "id": 5,
+    "nome": "Mexicanto",
+    "lat": -20.282741,
+    "lon": -40.293791
+  },
+  {
+    "id": 6,
+    "nome": "Tapiocaria Maceió",
+    "lat": -20.282673,
+    "lon": -40.293726
+  },
+  {
+    "id": 7,
+    "nome": "Rojo",
+    "lat": -20.282582,
+    "lon": -40.293667
+  },
+  {
+    "id": 8,
+    "nome": "Bendito Açaí",
+    "lat": -20.282436,
+    "lon": -40.293651
+  },
+  {
+    "id": 9,
+    "nome": "Pastelaria Paulista",
+    "lat": -20.282318,
+    "lon": -40.293675
+  },
+  {
+    "id": 10,
+    "nome": "Doceria",
+    "lat": -20.282202,
+    "lon": -40.29374
+  },
+  {
+    "id": 11,
+    "nome": "Servemais Espetos",
+    "lat": -20.282077,
+    "lon": -40.293941
+  },
+  {
+    "id": 12,
+    "nome": "Sem ID",
+    "lat": -20.282052,
+    "lon": -40.294032
+  },
+  {
+    "id": 13,
+    "nome": "A Melhor Opção",
+    "lat": -20.282054,
+    "lon": -40.294137
+  },
+  {
+    "id": 14,
+    "nome": "Sanduíches Tati Vero",
+    "lat": -20.282245,
+    "lon": -40.294459
+  },
+  {
+    "id": 15,
+    "nome": "Cantinho do Kibe",
+    "lat": -20.282097,
+    "lon": -40.294284
+  },
+  {
+    "id": 16,
+    "nome": "Bicho Papão",
+    "lat": -20.282175,
+    "lon": -40.2944
+  },
+  {
+    "id": 17,
+    "nome": "Pérola da Bahia Acarajé",
+    "lat": -20.282346,
+    "lon": -40.294512
+  },
+  {
+    "id": 18,
+    "nome": "Cervejaria Camburi",
+    "lat": -20.282466,
+    "lon": -40.294515
+  },
+  {
+    "id": 19,
+    "nome": "Yaki Food Vix",
+    "lat": -20.282562,
+    "lon": -40.294483
+  },
+  {
+    "id": 20,
+    "nome": "Hotdog Arita",
+    "lat": -20.282637,
+    "lon": -40.294448
+  },
+  {
+    "id": 21,
+    "nome": "Superfrango",
+    "lat": -20.281699,
+    "lon": -40.294569
+  },
+  {
+    "id": 22,
+    "nome": "Espetinhos da Lu",
+    "lat": -20.281795,
+    "lon": -40.294483
+  }
 ]
